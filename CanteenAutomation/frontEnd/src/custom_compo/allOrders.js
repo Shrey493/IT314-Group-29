@@ -136,19 +136,19 @@ function AllOrders() {
             {isLoaded ?
                 < div style={{ backgroundColor: '#DED8D8', display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
                     {/* first box */}
-                    <div style={{ borderRadius: '108px', marginTop: '70px', backgroundColor: '#EBE7E6', border: '2px solid white', width: '1341px', height: '1332px', boxShadow: '0px 10px 5px darkgrey', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ borderRadius: '108px', marginTop: '70px', backgroundColor: '#EBE7E6', border: '2px solid white', width: '1341px', padding:"30px 0px",boxShadow: '0px 10px 5px darkgrey', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                         {/* padding box */}
-                        <div style={{ width: '1191px', height: '1232px' }}>
+                        <div style={{ width: '1191px' }}>
                             {/* header div / Navigation bar */}
                             <div style={{ display: 'flex', height: '70px', justifyContent: 'center', marginTop: '20px' }}>
                                 <img src={logo} alt='website logo' style={{ marginRight: '100px', height: '80px' }} />
                                 <div style={{ display: 'flex', boxShadow: '0px 2px 0px darkGrey', paddingBottom: '10px', marginTop: '10px' }}>
-                                    <Button style={{ color: 'black', marginRight: '20px', marginTop: '10px', fontWeight: 'bold' }} href={`/cownerHome/${id}`}>Home</Button>
+                                    <Button style={{ color: 'black', marginRight: '20px', marginTop: '10px', fontWeight: 'bold' }} href={`/cownerHome/${id.id}`}>Home</Button>
                                     <Button style={{ color: 'black', marginRight: '20px', marginTop: '10px', fontWeight: 'bold' }} href='/home/feedback'>Feedback</Button>
                                     <Button style={{ color: 'black', marginRight: '20px', marginTop: '10px', fontWeight: 'bold' }} href='/home/aboutus'>About Us</Button>
                                     <Button style={{ color: 'black', marginRight: '60px', marginTop: '10px', fontWeight: 'bold' }} href='/home/contact'>Contact</Button>
-                                    <Button variant='contained' style={{ borderRadius: '50px', marginRight: '20px', marginTop: '10px', fontWeight: 'bold' }} href={`/cownerHome/pendingOrders/${id}`}>Pending Orders</Button>
-                                    <Button variant='contained' style={{borderRadius:'50px',marginRight:'20px',marginTop:'10px',fontWeight:'bold'}} href={`/cownerHome/allOrders/${id}`}>All orders</Button>
+                                    <Button variant='contained' style={{ borderRadius: '50px', marginRight: '20px', marginTop: '10px', fontWeight: 'bold' }} href={`/cownerHome/pendingOrders/${id.id}`}>Pending Orders</Button>
+                                    <Button variant='contained' style={{borderRadius:'50px',marginRight:'20px',marginTop:'10px',fontWeight:'bold'}} href={`/cownerHome/allOrders/${id.id}`}>All orders</Button>
                                         {/* drawer for cart */}
                                 {['left'].map((anchor) => (
                                     <React.Fragment key={anchor}>

@@ -9,7 +9,7 @@ urlpatterns = [
     path('admin', admin.site.urls),
     path('',views.index,name='index'),
     path('login', views.UserLogin.as_view(), name='login'),
-    path('logout', views.LogoutView.as_view(), name ='logout'),
+    path('logout', views.CustomLogoutView.as_view(), name ='logout'),
     path('register', views.UserRegistration.as_view(), name='register'),
     path('refresh', views.RefreshAccessToken.as_view(), name='refresh_access_token'),
     path('get-items', views.GetItems.as_view(), name='get_items'),
@@ -22,6 +22,8 @@ urlpatterns = [
     path('create-order', views.createorder.as_view(), name='create-order'),
     path('get-menu/<int:canteen_id>', views.GetMenu.as_view(), name='get-menu'),
     path('get-feedback', views.GetFeedback.as_view(), name='get-feedback'),
+    path('confirm-order', views.ConfirmOrder.as_view(), name='confirm-order'),
+    path('order-delivered', views.OrderDelivered.as_view(), name='order-delivered'),
 
     
 

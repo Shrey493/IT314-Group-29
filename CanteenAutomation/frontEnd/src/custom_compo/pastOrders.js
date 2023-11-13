@@ -5,6 +5,7 @@ import '../App.css';
 import { Typography } from '@mui/material/';
 import { ThemeProvider } from '@mui/material/';
 import Button from '@mui/material/Button';
+import { TextField } from '@mui/material/'
 
 //importing react cmp
 //import { useState } from 'react';
@@ -25,7 +26,7 @@ const Item = styled(Paper)(({ theme }) => ({
     color: theme.palette.text.secondary,
 }));
 
-function Order(props) {
+function PastOrder(props) {
 
     const displayOrders = props.items.map((item) => (
         <div key={item.canteen} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
@@ -49,33 +50,26 @@ function Order(props) {
             <div style={{ display: 'flex', justifyContent: 'space-around', padding: '40px', backgroundColor: '#E9DCDC', borderRadius: '30px', margin: '20px', width: '1100px' }}>
                 <div>
                     <Typography variant='h3' sx={{ marginBottom: '20px' }}>Order Details</Typography>
-                    <Grid container spacing={2} sx={{marginBottom:'20px'}}>
-                        <Grid item xs={4}>
-                            <Item><Typography>Name</Typography></Item>
-                        </Grid>
-                        <Grid item xs={4}>
-                            <Item><Typography>Quantity</Typography></Item>
-                        </Grid>
-                        <Grid item xs={4}>
-                            <Item><Typography>Price</Typography></Item>
-                        </Grid>
-                    </Grid>
                     {displayOrders}
-                    <Typography>Total Amount : {props.totalAmount}</Typography>
-                    <div style={{ display: 'flex', justifyContent: 'end' }}>
-                        {/* <Button variant='contained' sx={{ marginTop: '50px', marginLeft: '20px' }}>Prepared</Button> */}
-                        <Button id={props.id} onClick={()=>(props.completed(props.id))} variant='contained' sx={{ marginTop: '50px', marginLeft: '20px' }}>Completed</Button>
-                    </div>
                 </div>
                 <div>
-                    <Typography variant='h3' sx={{ marginBottom: '20px' }}>Customer Details</Typography>
-                    <Typography>Name:{props.name}</Typography>
-                    <Typography>Contact Number:xxx</Typography>
-                    <Typography>Email:abc@gmail.com</Typography>
+                    <div>
+                    <TextField
+                        id="filled-multiline-flexible"
+                        label="Feedback"
+                        multiline
+                        maxRows={5}
+                        variant="filled"
+                    />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'end' }}>
+                        <Button variant='contained' onClick={()=>(props.onButtonClick())} sx={{ marginTop: '50px', marginLeft: '20px' }}>Submit</Button>
+                    </div>
+
                 </div>
             </div>
         </ThemeProvider>
     )
 }
 
-export default Order;
+export default PastOrder;

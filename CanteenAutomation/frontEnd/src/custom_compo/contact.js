@@ -37,7 +37,8 @@ function Contact() {
 
     const [accountDetails, setAccountDetails] = useState()
     const [gotAccountDetails, setGotAccountDetails] = useState(false)
-    const [gotCartDetails, setGotCartDetails] = useState(true)
+    const [cartDetails, setCartDetails] = useState()
+    const [gotCartDetails, setGotCartDetails] = useState(false)
 
     const apiUrlAcount = "http://127.0.0.1:8000/get-account-details"
 
@@ -66,6 +67,33 @@ function Contact() {
             })
             .catch(error => console.error('Error:', error));
     }, [])
+
+    const apiUrlCart = "http://127.0.0.1:8000/get-cust-orders"
+
+    useEffect(() => {
+        fetch(apiUrlCart, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token.access}`
+            },
+        })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Something went wrong ...');
+                }
+            })
+            .then(data => {
+                if(data.length===0)setCartDetails(data)
+                else if (data[data.length-1].status!=="AddedToCart")setCartDetails([])
+                else setCartDetails(data[data.length-1])
+                setGotCartDetails(true)
+            })
+            .catch(error => console.error('Error:', error));
+    }, [])
+
 
     //state for drawer
     const [state, setState] = React.useState({
@@ -102,14 +130,41 @@ function Contact() {
         //onClick={toggleDrawer(anchor, false)}
         //onKeyDown={toggleDrawer(anchor, false)}
         >
-            {anchor === "right" ? <CartContent drawerButton={drawerButton} anchor={anchor} /> : <AccountContent drawerButton={drawerButton} anchor={anchor} accountDetails={accountDetails}/>}
+            {anchor === "right" ? <CartContent drawerButton={drawerButton} anchor={anchor} cartDetails={cartDetails} payment={handlePayment}/> : <AccountContent drawerButton={drawerButton} anchor={anchor} accountDetails={accountDetails}/>}
         </Box>
     );
+
+    const handlePayment = (order_id) =>{
+        const apiPayment = "http://127.0.0.1:8000/confirm-order"
+        fetch(apiPayment, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token.access}`
+            },
+            body: JSON.stringify({
+                "order_id": order_id
+            }),
+        })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Something went wrong ...');
+                }
+            })
+            .then(data => {
+                alert("Payment Successful")
+                //setCartItems({ "order_id": -1, "canteen_id": parseInt(id.id), "order": data.map((item) => ({ "item_id": item.id, "quantity": 0 })), "total_amount": 0 })
+                window.location.reload()
+            })
+            .catch(error => console.error('Error:', error));
+    }
 
     return (
         <ThemeProvider theme={theme}>
             {/* background */}
-            {gotAccountDetails?<div style={{ backgroundColor: '#DED8D8', display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
+            {gotAccountDetails&&gotCartDetails?<div style={{ backgroundColor: '#DED8D8', display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
                 {/* first box */}
                 <div style={{ borderRadius: '108px', marginTop: '70px', backgroundColor: '#EBE7E6', border: '2px solid white', width: '1341px', height: '732px', boxShadow: '0px 10px 5px darkgrey', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                     {/* padding box */}
@@ -140,7 +195,7 @@ function Contact() {
                                 ))}
                                 {['right'].map((anchor) => (
                                     <React.Fragment key={anchor}>
-                                        <Button variant='contained' startIcon={<ShoppingCartIcon />} style={{ borderRadius: '50px', marginRight: '20px', marginTop: '10px', fontWeight: 'bold' }} onClick={toggleDrawer(anchor, true)}>0</Button>
+                                        <Button variant='contained' startIcon={<ShoppingCartIcon />} style={{ borderRadius: '50px', marginRight: '20px', marginTop: '10px', fontWeight: 'bold' }} onClick={toggleDrawer(anchor, true)}>{cartDetails.total_quantity}</Button>
                                         <SwipeableDrawer
                                             anchor={anchor}
                                             open={state[anchor]}
@@ -181,7 +236,7 @@ function Contact() {
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'left', marginTop: '30px', marginLeft: '200px'}}>
-                            <Typography variant='h6'> Mihir Goel </Typography> <Typography variant='h6' style={{ marginLeft: '138px' }}> 202101473 </Typography>
+                            <Typography variant='h6'> Mihir Gohel </Typography> <Typography variant='h6' style={{ marginLeft: '127px' }}> 202101473 </Typography>
                             <Typography variant='h6' style={{ marginLeft: '150px'}}> Kalathiya Shrut </Typography> <Typography variant='h6' style={{ marginLeft: '53px' }}> 202101479 </Typography>
                         </div>
 

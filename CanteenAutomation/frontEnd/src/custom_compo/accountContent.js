@@ -34,7 +34,7 @@ function AccountContent(props) {
                 <div style={{ borderRadius: '30px', border: '2px solid white', width: '415px', marign: '5px', padding: '20px', marginTop: '80px' }}>
                     <Typography variant="h5">Edit Profile</Typography>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Button variant='contained' sx={{ borderRadius: '30px', margin: '40px 0px 5px 0px', width: '350px', padding: '10px' }} endIcon={<EastIcon />}>Sign Out</Button>
+                        <Button variant='contained' sx={{ borderRadius: '30px', margin: '40px 0px 5px 0px', width: '350px', padding: '10px' }} endIcon={<EastIcon />} onClick={()=>(props.signOut())}>Sign Out</Button>
                     </div>
 
                 </div>

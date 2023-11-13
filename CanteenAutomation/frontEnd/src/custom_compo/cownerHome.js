@@ -2,7 +2,7 @@
 import '../App.css';
 
 //importing MUI cmp
-import { Typography } from '@mui/material/';
+import { Typography, TextField } from '@mui/material/';
 import { ThemeProvider } from '@mui/material/';
 import Button from '@mui/material/Button';
 
@@ -35,21 +35,26 @@ function CownerHome() {
     //if (altered_menu_data.length===0)return <Navigate to='/error' replace={true}/>
     const [isLoaded, setIsLoaded] = useState(false)
     const [menu, setMenu] = useState()
-
+    const [data, setData] = useState()
     const [accountDetails, setAccountDetails] = useState()
     const [gotAccountDetails, setGotAccountDetails] = useState(false)
+    const [newItem, setNewItem] = useState({ "name": "", "price": 0 })
+    const [toggleAdd, setToggleAdd] = useState(false)
 
-    
+    const [color, setColor] = useState(false)
+
     const apiUrlDelete = "http://127.0.0.1:8000/delete-items"
 
-    const handleRemoveItem = (event) =>{
+    const handleRemoveItem = (id) => {
+        const userConfirm = window.confirm("On clicking OK, whole item will be permanentely deleted.")
+        if (userConfirm) {
             fetch(apiUrlDelete, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token.access}`
                 },
-                body: JSON.stringify({id: `${event.target.id}`}),
+                body: JSON.stringify({ item_id: id }),
             })
                 .then(response => {
                     if (response.ok) {
@@ -59,10 +64,11 @@ function CownerHome() {
                     }
                 })
                 .then(data => {
-                    // Handle the response data here
-                    console.log(data);
+                    setData(data)
+                    window.location.reload()
                 })
                 .catch(error => console.error('Error:', error));
+        }
     }
 
     const apiUrlAccount = "http://127.0.0.1:8000/get-account-details"
@@ -84,8 +90,6 @@ function CownerHome() {
                 }
             })
             .then(data => {
-                // Handle the response data here
-                console.log(data);
                 setAccountDetails(data)
                 setGotAccountDetails(true)
             })
@@ -94,6 +98,7 @@ function CownerHome() {
 
 
     const apiUrl = "http://localhost:8000/get-items"
+
 
     useEffect(() => {
         fetch(apiUrl, {
@@ -111,9 +116,8 @@ function CownerHome() {
                 }
             })
             .then(data => {
-                // Handle the response data here
-                console.log(data);
-                setMenu(data.map((item) => (<OwnMenuCard key={item.id} id={item.id} name={item.name} desc={item.desc} price={item.price} canteen={item.canteen} removeItem={handleRemoveItem}/>)))
+                setData(data)
+                setMenu(data.map((item) => (<OwnMenuCard key={item.id} id={item.id} name={item.name} desc={item.desc} price={item.price} canteen={item.canteen} removeItem={handleRemoveItem} />)))
                 setIsLoaded(true)
             })
             .catch(error => console.error('Error:', error));
@@ -158,24 +162,62 @@ function CownerHome() {
         </Box>
     );
 
+    const handleAdd = () => {
+        const userConfirm = window.confirm("Are you sure you want to add this item?")
+        if (userConfirm) {
+            const apiUrl = "http://localhost:8000/get-items"
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token.access}`
+                },
+                body: JSON.stringify({ ...newItem, "desc": "blah blah blah" })
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Something went wrong ...');
+                    }
+                })
+                .then(data => {
+                    window.location.reload()
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    }
 
+    const handleNewItemChange = (event) => {
+        if (event.target.id === "Name") {
+            setNewItem({ ...newItem, "name": event.target.value })
+        }
+        else if (event.target.id === "Price") {
+            setNewItem({ ...newItem, "price": event.target.value })
+        }
+    }
+
+    const handleAddItem = () => {
+        setToggleAdd((toggleAdd)=>(!toggleAdd))
+    }
+    console.log(data)
     return (
         <ThemeProvider theme={theme}>
             {isLoaded && gotAccountDetails ? <div style={{ backgroundColor: '#DED8D8', display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
                 {/* first box */}
-                <div style={{ borderRadius: '108px', marginTop: '70px', backgroundColor: '#EBE7E6', border: '2px solid white', width: '1341px', height: '732px', boxShadow: '0px 10px 5px darkgrey', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ borderRadius: '108px', marginTop: '70px', backgroundColor: '#EBE7E6', border: '2px solid white', width: '1341px', boxShadow: '0px 10px 5px darkgrey', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',paddingBottom:'50px' }}>
                     {/* padding box */}
-                    <div style={{ width: '1191px', height: '632px' }}>
+                    <div style={{ width: '1191px' }}>
                         {/* header div / Navigation bar */}
                         <div style={{ display: 'flex', height: '70px', justifyContent: 'center', marginTop: '20px' }}>
                             <img src={logo} alt='website logo' style={{ marginRight: '100px', height: '80px' }} />
                             <div style={{ display: 'flex', boxShadow: '0px 2px 0px darkGrey', paddingBottom: '10px', marginTop: '10px' }}>
-                                <Button style={{ color: 'black', marginRight: '20px', marginTop: '10px', fontWeight: 'bold' }} href={`/cownerHome/${menu[0].canteen}`}>Home</Button>
+                                <Button style={{ color: 'black', marginRight: '20px', marginTop: '10px', fontWeight: 'bold' }} href={`/cownerHome/${data[0].canteen}`}>Home</Button>
                                 <Button style={{ color: 'black', marginRight: '20px', marginTop: '10px', fontWeight: 'bold' }} href='/home/feedback'>Feedback</Button>
                                 <Button style={{ color: 'black', marginRight: '20px', marginTop: '10px', fontWeight: 'bold' }} href='/home/aboutus'>About Us</Button>
                                 <Button style={{ color: 'black', marginRight: '60px', marginTop: '10px', fontWeight: 'bold' }} href='/home/contact'>Contact</Button>
-                                <Button variant='contained' style={{ borderRadius: '50px', marginRight: '20px', marginTop: '10px', fontWeight: 'bold' }} href={`/cownerHome/pendingOrders/${menu[0].canteen}`}>Pending Orders</Button>
-                                <Button variant='contained' style={{ borderRadius: '50px', marginRight: '20px', marginTop: '10px', fontWeight: 'bold' }} href={`/cownerHome/allOrders/${menu[0].canteen}`}>All orders</Button>
+                                <Button variant='contained' style={{ borderRadius: '50px', marginRight: '20px', marginTop: '10px', fontWeight: 'bold' }} href={`/cownerHome/pendingOrders/${data[0].canteen}`}>Pending Orders</Button>
+                                <Button variant='contained' style={{ borderRadius: '50px', marginRight: '20px', marginTop: '10px', fontWeight: 'bold' }} href={`/cownerHome/allOrders/${data[0].canteen}`}>All orders</Button>
                                 {/* drawer for cart */}
                                 {['left'].map((anchor) => (
                                     <React.Fragment key={anchor}>
@@ -197,11 +239,19 @@ function CownerHome() {
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '70px' }}>
                             <Typography variant='h2'>{menu[0].canteen}</Typography>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'end', marginTop: '30px' }}>
-                            <Button variant='contained' sx={{ borderRadius: '30px', marginRight: '20px' }}>Add New Items</Button>
-                            <Button variant='contained' sx={{ borderRadius: '30px', marginRight: '20px' }}>Save Changes</Button>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '30px' }}>
+                            <Button variant='contained' sx={{ borderRadius: '30px', marginRight: '20px' }} onClick={handleAddItem}>Add New Items</Button>
+                            {/* <Button variant='contained' sx={{ borderRadius: '30px', marginRight: '20px' }}>Save Changes</Button> */}
                         </div>
                         {/* child box of padding box */}
+                        {!toggleAdd?<div></div>:<div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', marginTop: '20px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '10px', backgroundColor: color ? '#E8CFCF' : '#E9DCDC', borderRadius: '30px', margin: '10px' }} onMouseEnter={() => (setColor(true))} onMouseLeave={() => (setColor(false))}>
+                                <TextField id="Name" onChange={handleNewItemChange} value={newItem.name} variant='outlined' label="Name" sx={{ width: '350px', marginLeft: '20px', margin: '10px 30px' }} />
+                                <TextField id="Price" onChange={handleNewItemChange} value={newItem.price} variant='outlined' label="Price" sx={{ fontWeight: 'bold', width: '150px' }} />
+                                <Button variant='contained' sx={{ margin: '0px 20px', borderRadius: '30px', height: '40px' }} onClick={handleAdd}>Add</Button>
+                            </div>
+                        </div>}
+                        
                         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', marginTop: '20px' }}>
                             {menu}
                         </div>
@@ -230,10 +280,11 @@ function CownerHome() {
                         <Typography style={{ color: '#DAC6C7', marginBottom: '20px' }}>Instagram</Typography>
                     </div>
                 </footer>
-            </div> : <div>Loading</div>}
+            </div> : <div>Loading</div>
+            }
             {/* background */}
 
-        </ThemeProvider>
+        </ThemeProvider >
     )
 }
 

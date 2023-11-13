@@ -7,6 +7,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.forms import inlineformset_factory
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
+from rest_framework_simplejwt.views import TokenObtainPairView
+
 # from .forms import CreateUserForm
 from django.contrib import messages
 from .models import *
@@ -20,10 +22,29 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken,AccessToken
 from django.contrib.auth import login, authenticate
 from .models import User
 from .serializers import *
+from .models import CustomBlacklistedToken
+import time
+from datetime import timezone,timedelta
+class CustomLogoutView(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data.get("refresh_token")
+            # logout(request)
+            # If the request doesn't contain a refresh token in the data, handle the exception
+        except KeyError:
+            return Response({'detail': 'Refresh token is required in the request data.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        refresh_token_obj = RefreshToken(refresh_token)
+        refresh_token_obj.blacklist()
+        # access_token_obj.blacklist()
+        
+        return Response({'detail': 'Successfully logged out.'}, status=status.HTTP_200_OK)
 
 # Create your views here.
 class UserLogin(APIView):
@@ -93,21 +114,11 @@ class RefreshAccessToken(APIView):
         except Exception as e:
             # Handle any exceptions that might occur during token refresh
             print(f"Token refresh failed: {e}")
-            return None
+            return Response({
+                'message': 'Fail'
+            })
 def index(request):
     return HttpResponse('Hello world')
-
-class LogoutView(APIView):
-     permission_classes = (IsAuthenticated,)
-     def post(self, request):
-          
-          try:
-               refresh_token = request.data["refresh_token"]
-               token = RefreshToken(refresh_token)
-               token.blacklist()
-               return Response(status=status.HTTP_205_RESET_CONTENT)
-          except Exception as e:
-               return Response(status=status.HTTP_400_BAD_REQUEST)
 
 class DeleteItems(APIView):
     permission_classes = [IsAuthenticated]
@@ -174,7 +185,7 @@ class getOrders(APIView):
     def get(self,request):
         
         canteen_obj = canteen.objects.filter(owner = request.user.profile)[0]
-        order_obj = orders.objects.filter(order_canteen=canteen_obj)
+        order_obj = orders.objects.filter(order_canteen=canteen_obj,status="Delivered")
         Item_serialized = OrderSerializer(order_obj,many=True)
         for i in Item_serialized.data:
             order_id=i["id"]
@@ -183,20 +194,26 @@ class getOrders(APIView):
                     for k in i[j]:
                         item_id=k["id"]
                         quantity_value=orderquantity.objects.filter(item_id=item_id,order_id=order_id).first()
-                        k["quantity"]=quantity_value.quantity
+                        if(quantity_value is not None):
+                            k["quantity"]=quantity_value.quantity
+                        else:
+                            print(order_id)
         return Response(Item_serialized.data,status=status.HTTP_200_OK)
 
 class getaccountdetails(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
     def get(self,request):        
-        try:
-            customer_obj = Profile.objects.filter(user = request.user)[0]
-            Cust_serialized=AccountDetailsSerializer(customer_obj)
-            return Response(Cust_serialized.data,status=status.HTTP_200_OK)
-        except:
-            return Response({"success":False})
-
+        customer_obj_profile = Profile.objects.filter(user = request.user)[0]
+        customer_obj=customer.objects.filter(cust=customer_obj_profile).first()
+        Cust_serialized=AccountDetailsSerializer(customer_obj_profile)
+        final_obj={}
+        for i in Cust_serialized.data:
+            print(Cust_serialized[i])
+            final_obj[i]=Cust_serialized[i].value
+        k=orders.objects.filter(order_cust=customer_obj).count()
+        final_obj["total_orders"]=k
+        return Response(final_obj,status=status.HTTP_200_OK)
 
 class getPendingOrders(APIView):
     permission_classes = [IsAuthenticated]
@@ -238,6 +255,17 @@ class getcustOrders(APIView):
             customer_obj = customer.objects.filter(cust = request.user.profile)[0]
             order_obj = orders.objects.filter(order_cust=customer_obj)
             Item_serialized = OrderSerializer(order_obj,many=True)
+            for i in Item_serialized.data:
+                total_quantity=0
+                order_id=i["id"]
+                for j in i:
+                    if(j=='items'):
+                        for k in i[j]:
+                            item_id=k["id"]
+                            quantity_value=orderquantity.objects.filter(item_id=item_id,order_id=order_id).first()
+                            k["quantity"]=quantity_value.quantity
+                            total_quantity=total_quantity+quantity_value.quantity
+                i["total_quantity"]=total_quantity
             return Response(Item_serialized.data,status=status.HTTP_200_OK)
         except:
             return Response({"success":False})
@@ -251,17 +279,33 @@ class createorder(APIView):
         canteen_id=request.data.get('canteen_id')
         canteen_obj=canteen.objects.filter(canteen_id=canteen_id).first()
         data =request.data.get("order")
-        order_obj = orders.objects.create(order_cust=customer_obj,order_canteen=canteen_obj,status="Received",total_amount=request.data.get("total_amount"))
+        orderid=request.data.get("order_id")
+        if(orderid == -1):
+            order_obj = orders.objects.create(order_cust=customer_obj,order_canteen=canteen_obj,status="AddedToCart",total_amount=request.data.get("total_amount"))
+        else:
+            order_obj=orders.objects.filter(id=orderid)
+            order_obj.delete()
+            order_obj = orders.objects.create(order_cust=customer_obj,order_canteen=canteen_obj,status="AddedToCart",total_amount=request.data.get("total_amount"))
         for itr in data:
             item_obj=items.objects.filter(id=itr["item_id"]).first()
             quan_obj=itr["quantity"]
             orderquantity.objects.create(order_id=order_obj,item_id=item_obj,quantity=quan_obj)
             order_obj.items.add(item_obj)
         order_obj.save()
-
-        return Response({"success":True},status=status.HTTP_200_OK)
+        return Response({"order_id":order_obj.id},status=status.HTTP_200_OK)
+    
+class ConfirmOrder(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    def post(self,request):
+        orderid=request.data.get("order_id")
+        order_obj=orders.objects.filter(id=orderid).first()
+        order_obj.status="Received"
+        order_obj.save()
+        return Response({"order_id":orderid},status=status.HTTP_200_OK)
     
 class GetMenu(APIView):
+
     def get(self,request,canteen_id):
             item_obj=items.objects.filter(canteen=canteen_id)
             Item_serialized = MenuItemSerializer(item_obj,many=True)
@@ -275,18 +319,67 @@ class GetFeedback(APIView):
     def post(self, request):
         order_id=request.data.get('order_id')
         fd=request.data.get('feedback')
-        rating=request.data.get('rating')
+        #rating=request.data.get('rating')
         order_obj=orders.objects.filter(id=order_id).first()
         if(request.user == order_obj.order_cust.cust.user):
-            feedback_obj=feedback.objects.create(order_id=order_obj,review=fd,rating=rating)
-            return Response({"success":True})
+            feedback_obj=feedback.objects.create(order_id=order_obj,review=fd)
+            customer_profile_obj = Profile.objects.filter(user = request.user)[0]
+            customer_obj=customer.objects.filter(cust=customer_profile_obj).first()
+            order_obj=orders.objects.filter(order_cust=customer_obj,status='Delivered')
+            order_serialzed=OrderSerializer(order_obj,many=True)
+            fed_orders=[]
+            for i in list(feedback.objects.all().values()):
+                fed_orders.append(i["order_id_id"])
+            final_list=[]
+            for i in order_serialzed.data:
+                if i["id"] not in fed_orders:
+                    final_list.append(i)
+            print(fed_orders)
+            return Response(final_list,status=status.HTTP_200_OK)
         return Response({"success":False})
     def get(self,request):
+        customer_profile_obj = Profile.objects.filter(user = request.user)[0]
+        customer_obj=customer.objects.filter(cust=customer_profile_obj).first()
+        order_obj=orders.objects.filter(order_cust=customer_obj,status='Delivered')
+        order_serialzed=OrderSerializer(order_obj,many=True)
+        fed_orders=[]
+        for i in list(feedback.objects.all().values()):
+            fed_orders.append(i["order_id_id"])
+        final_list=[]
+        for i in order_serialzed.data:
+            if i["id"] not in fed_orders:
+                final_list.append(i)
+        print(fed_orders)
+        return Response(final_list,status=status.HTTP_200_OK)
+
+from django.core.mail import send_mail
+class OrderDelivered(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    def post(self, request):
         order_id=request.data.get('order_id')
+        canteen_obj = canteen.objects.filter(owner=request.user.profile)[0]
         order_obj=orders.objects.filter(id=order_id).first()
-        if(request.user == order_obj.order_cust.cust.user):
-            feedback_obj=feedback.objects.filter(order_id=order_id)
-            feedback_serialized=feedbackserializer(feedback_obj,many=True)
-            return Response(feedback_serialized.data,status=status.HTTP_200_OK)
-        return Response({"success":False})
-    
+        if(order_obj.order_canteen==canteen_obj):
+            order_obj.status="Delivered"
+            order_obj.save()
+            name = order_obj.order_cust.cust.name
+            send_mail(
+                "Your Order Is Prepared",
+                f"Hii {name}. Your order is prepared",
+                "django.reset.system@gmail.com",
+                [f"{order_obj.order_cust.cust.user.email}"],
+                fail_silently=False,
+            )
+        if canteen_obj is not None:
+            order_obj = orders.objects.filter(order_canteen=canteen_obj, status__in=['Received'])
+            Item_serialized = OrderSerializer(order_obj,many=True)
+            for i in Item_serialized.data:
+                order_id=i["id"]
+                for j in i:
+                    if(j=='items'):
+                        for k in i[j]:
+                            item_id=k["id"]
+                            quantity_value=orderquantity.objects.filter(item_id=item_id,order_id=order_id).first()
+                            k["quantity"]=quantity_value.quantity
+            return Response(Item_serialized.data,status=status.HTTP_200_OK)
