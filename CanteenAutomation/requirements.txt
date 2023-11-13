@@ -12,7 +12,7 @@ arrow==1.2.3
 asgiref==3.5.2
 asn1crypto==1.5.1
 asttokens==2.2.1
-async-timeout==4.0.2
+async-timeout==4.0.1
 attrs==22.2.0
 autopep8==2.0.2
 backcall==0.2.0
