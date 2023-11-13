@@ -120,7 +120,7 @@ function SignUp() {
         {isSignupSuccessful && <Navigate to="/" />}
         {/* sign-up box */}
         <Container className='signIn' sx={{ background: "rgba(222,216,216,0.5)", borderRadius: '30px', ...signIn_style_ext }}>
-          <Typography sx={{ fontWeight: 'bolder', fontSize: '30px', marginTop: '30px' }}>Sign Up</Typography>
+          <Typography sx={{ fontWeight: 'bolder', fontSize: '31px', marginTop: '31px' }}>Sign Up</Typography>
           <TextField id="Email" label="Email" value={email} onChange={handleChange} variant="outlined" sx={{ background: "rgba(250,249,246,0.1)", borderRadius: "5px", marginBottom: '30px', marginTop: '23px' }} />
           <TextField id="Password" label="Password" value={password} onChange={handleChange} variant="outlined" sx={{ background: "rgba(250,249,246,0.1)", borderRadius: "5px", marginBottom: '30px' }} />
           <TextField id="Confirm Password" label="Confirm Password" value={confirmPassword} onChange={handleChange} variant="outlined" sx={{ background: "rgba(250,249,246,0.1)", borderRadius: "5px", marginBottom: '30px' }} />
