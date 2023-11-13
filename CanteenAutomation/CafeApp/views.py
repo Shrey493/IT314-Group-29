@@ -326,12 +326,23 @@ class GetFeedback(APIView):
             customer_profile_obj = Profile.objects.filter(user = request.user)[0]
             customer_obj=customer.objects.filter(cust=customer_profile_obj).first()
             order_obj=orders.objects.filter(order_cust=customer_obj,status='Delivered')
-            order_serialzed=OrderSerializer(order_obj,many=True)
+            order_serialized=OrderSerializer(order_obj,many=True)
+            for i in order_serialized.data:
+                order_id=i["id"]
+                for j in i:
+                    if(j=='items'):
+                        for k in i[j]:
+                            item_id=k["id"]
+                            quantity_value=orderquantity.objects.filter(item_id=item_id,order_id=order_id).first()
+                            if(quantity_value is not None):
+                                k["quantity"]=quantity_value.quantity
+                            else:
+                                print(order_id)
             fed_orders=[]
             for i in list(feedback.objects.all().values()):
                 fed_orders.append(i["order_id_id"])
             final_list=[]
-            for i in order_serialzed.data:
+            for i in order_serialized.data:
                 if i["id"] not in fed_orders:
                     final_list.append(i)
             print(fed_orders)
@@ -341,12 +352,23 @@ class GetFeedback(APIView):
         customer_profile_obj = Profile.objects.filter(user = request.user)[0]
         customer_obj=customer.objects.filter(cust=customer_profile_obj).first()
         order_obj=orders.objects.filter(order_cust=customer_obj,status='Delivered')
-        order_serialzed=OrderSerializer(order_obj,many=True)
+        order_serialized=OrderSerializer(order_obj,many=True)
+        for i in order_serialized.data:
+            order_id=i["id"]
+            for j in i:
+                if(j=='items'):
+                    for k in i[j]:
+                        item_id=k["id"]
+                        quantity_value=orderquantity.objects.filter(item_id=item_id,order_id=order_id).first()
+                        if(quantity_value is not None):
+                            k["quantity"]=quantity_value.quantity
+                        else:
+                            print(order_id)
         fed_orders=[]
         for i in list(feedback.objects.all().values()):
             fed_orders.append(i["order_id_id"])
         final_list=[]
-        for i in order_serialzed.data:
+        for i in order_serialized.data:
             if i["id"] not in fed_orders:
                 final_list.append(i)
         print(fed_orders)
